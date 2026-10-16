@@ -52,6 +52,10 @@ Or from PyPI (after a GitHub release is published):
 pip install openai-translate
 ```
 
-Publishing to PyPI uses trusted publishing — add this repo as a trusted
-publisher on pypi.org (project name `openai-translate`), then create a GitHub
-release and the workflow publishes automatically.
+Publishing to PyPI uses an API token:
+
+1. On pypi.org: Account settings → API tokens → create a token scoped to the
+   `openai-translate` project
+2. In this repo: Settings → Secrets and variables → Actions → add it as
+   `PYPI_API_TOKEN`
+3. Create a GitHub release — the workflow builds and publishes automatically
