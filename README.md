@@ -33,9 +33,15 @@ handshake + retry. `source="detect"` auto-detects the input language.
 ## Usage
 
 ```python
-from translate import OpenAITranslate
+from main import OpenAITranslate
 
 t = OpenAITranslate()
 print(t.translate("Hello world", target="es", source="en"))
 print(t.translate("مرحبا بالعالم", target="en"))  # source auto-detected
+```
+
+Install as a library:
+
+```bash
+pip install .
 ```
