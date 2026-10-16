@@ -33,7 +33,7 @@ handshake + retry. `source="detect"` auto-detects the input language.
 ## Usage
 
 ```python
-from main import OpenAITranslate
+from openai_translate import OpenAITranslate
 
 t = OpenAITranslate()
 print(t.translate("Hello world", target="es", source="en"))
@@ -45,3 +45,13 @@ Install as a library:
 ```bash
 pip install .
 ```
+
+Or from PyPI (after a GitHub release is published):
+
+```bash
+pip install openai-translate
+```
+
+Publishing to PyPI uses trusted publishing — add this repo as a trusted
+publisher on pypi.org (project name `openai-translate`), then create a GitHub
+release and the workflow publishes automatically.
