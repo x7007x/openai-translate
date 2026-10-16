@@ -1,34 +1,23 @@
-# OpenAI Translate without login/keys
+# OpenAI Translate
 
-`translate.py` translates via OpenAI's ChatGPT Translate (`chatgpt.com/translate/`)
-with plain `requests` — no login, no API key. Everything is auto-extracted at
-runtime by replicating the page's own anonymous handshake (reverse-engineered
-from its JS bundles).
+[![PyPI version](https://badge.fury.io/py/openai-translate.svg)](https://pypi.org/project/openai-translate/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-## Request chain
+Translate text with OpenAI's ChatGPT Translate — no login, no API key required.
 
-1. `GET https://chatgpt.com/translate/` → cookies (`oai-did` device id, Cloudflare).
-2. `POST https://chatgpt.com/backend-api/sentinel/chat-requirements/prepare`
-   body `{"p": "gAAAAAC" + base64(JSON(fingerprint config))}`
-   → `{prepare_token, proofofwork: {seed, difficulty}, turnstile, so}`.
-3. Solve the proof-of-work in Python: FNV-1a-32 + fmix32 avalanche over
-   `seed + base64(JSON(config))`, find config with
-   `digest[:len(difficulty)] <= difficulty` (string compare, ~2.6% hit rate,
-   solves in milliseconds). Answer = `"gAAAAAB" + base64(JSON(config)) + "~S"`.
-4. `POST https://chatgpt.com/backend-api/sentinel/chat-requirements/finalize`
-   body `{"prepare_token", "proofofwork": answer}` → `{token}` (persona
-   `chatgpt-noauth`). Turnstile is listed as required but the translate
-   endpoint accepts a valid PoW without it.
-5. `POST https://chatgpt.com/translate/stream` with anonymous headers
-   (`OAI-Language`, `OAI-Device-Id`, `x-openai-web-frontend: core_web`,
-   `OAI-Client-Version`, `OAI-Client-Build-Number`, `OAI-Session-Id`) and body
-   `{request: {sourceLanguageCode, targetLanguageCode, text, pipeline:
-   "latency-optimized", ...}, sentinel: {chatReqToken, chatReqPrepareToken,
-   turnstileToken: null, proofToken}}`.
-   Response is SSE: `data: {"delta": "..."}` chunks, ends with `data: [DONE]`.
+## Features
 
-Notes: tokens are effectively single-use — a 403 triggers one automatic fresh
-handshake + retry. `source="detect"` auto-detects the input language.
+- No authentication or API keys needed
+- Automatic source language detection
+- 50+ languages supported
+- Lightweight: only depends on `requests`
+
+## Installation
+
+```bash
+pip install openai-translate
+```
 
 ## Usage
 
@@ -36,26 +25,31 @@ handshake + retry. `source="detect"` auto-detects the input language.
 from openai_translate import OpenAITranslate
 
 t = OpenAITranslate()
-print(t.translate("Hello world", target="es", source="en"))
-print(t.translate("مرحبا بالعالم", target="en"))  # source auto-detected
+
+t.translate("Hello world", target="es", source="en")
+# Hola mundo
+
+t.translate("مرحبا بالعالم", target="en")
+# Hello world (source auto-detected)
+
+t.translate("Good morning", target="ar", source="en")
+# صباح الخير
 ```
 
-Install as a library:
+### `translate(text, target="en", source="detect")`
 
-```bash
-pip install .
-```
+| Argument | Description                          | Default    |
+|----------|--------------------------------------|------------|
+| `text`   | Text to translate                    | —          |
+| `target` | Target language code (e.g. `es`)     | `"en"`     |
+| `source` | Source language code, or `"detect"`  | `"detect"` |
 
-Or from PyPI (after a GitHub release is published):
+## How it works
 
-```bash
-pip install openai-translate
-```
+The library replicates the public web flow of `chatgpt.com/translate`,
+handling the session bootstrap and request handshake automatically —
+everything is extracted at runtime, nothing for you to configure.
 
-Publishing to PyPI uses an API token:
+## License
 
-1. On pypi.org: Account settings → API tokens → create a token scoped to the
-   `openai-translate` project
-2. In this repo: Settings → Secrets and variables → Actions → add it as
-   `PYPI_API_TOKEN`
-3. Create a GitHub release — the workflow builds and publishes automatically
+MIT
