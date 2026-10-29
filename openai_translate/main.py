@@ -9,13 +9,6 @@ import requests
 class OpenAITranslate:
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
     BASE = "https://chatgpt.com"
-    LABELS = {
-        "detect": "Detect language", "en": "English", "ar": "Arabic", "es": "Spanish",
-        "fr": "French", "de": "German", "it": "Italian", "pt": "Portuguese",
-        "ru": "Russian", "zh": "Chinese", "ja": "Japanese", "ko": "Korean",
-        "tr": "Turkish", "hi": "Hindi", "nl": "Dutch", "pl": "Polish",
-    }
-
     def __init__(self):
         self.s = requests.Session()
         self.s.headers.update({
@@ -80,34 +73,19 @@ class OpenAITranslate:
 
     def _stream(self, text, target, source):
         payload = {
-            "request": {
-                "includeDetectedLanguage": source == "detect",
-                "sourceLanguageCode": source,
-                "sourceLanguageLabel": self.LABELS.get(source, source),
-                "targetLanguageCode": target,
-                "targetLanguageLabel": self.LABELS.get(target, target),
-                "text": text,
-                "pipeline": "latency-optimized",
-            },
-            "dedicatedRequest": None,
-            "sentinel": {
-                "chatReqToken": self._token,
-                "chatReqPrepareToken": self._prepare_token,
-                "turnstileToken": None,
-                "proofToken": self._proof,
-            },
+            "text": text,
+            "sourceLanguageCode": source,
+            "targetLanguageCode": target,
         }
         headers = {
             "Content-Type": "application/json",
             "Accept": "text/event-stream",
-            "OAI-Language": "en-US",
             "OAI-Device-Id": self.s.cookies.get("oai-did", ""),
-            "x-openai-web-frontend": "core_web",
-            "OAI-Client-Version": "prod-c8f39f744fd82e629b912bf379c8c9837ab5ccde",
-            "OAI-Client-Build-Number": "12327112",
             "OAI-Session-Id": str(uuid.uuid4()),
+            "OpenAI-Sentinel-Chat-Requirements-Token": self._token,
+            "OpenAI-Sentinel-Proof-Token": self._proof,
         }
-        return self.s.post(self.BASE + "/translate/stream", json=payload,
+        return self.s.post(self.BASE + "/backend-anon/translate/stream", json=payload,
                            headers=headers, timeout=90, stream=True)
 
     @staticmethod
